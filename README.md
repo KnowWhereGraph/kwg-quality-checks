@@ -12,13 +12,21 @@ The application config is set in the root `config.json`, where the endpoint and 
 additional project functionality can be injected into this file.
 
 ## Running
-The project is managed with poetry. To run the SPARQL queries against the database,
+The project is managed with poetry and requires at least Python 10.
+
+To set up a virtual environment with Python 10 run the following
+```commandline
+pyenv install 3.10
+pyenv local 3.10
+```
+
+To install dependencies and run the SPARQL queries against the database
 ```commandline
 poetry install
 poetry run pytest
 ```
 
-To run an individual test,
+To run an individual test
 ```commandline
 poetry install
 poetry run pytest tests/<your_test_.py>
@@ -41,13 +49,13 @@ There are two suggested ways of testing the graph for content.
 This is the recommended approach where the goal is to write a query that counts the number of results, based on some filter.
 For example,
 
-> Count the number of labels on all administrative regions and filter the ones with characters '?', '!', and '-' out.
+> Count the number of labels that contain unsupported charaters.
 
-If the query returns anything greater than 0, it means that there are sanitized labels.
+If the query returns anything greater than 0, it means that there are un-sanitized labels.
 
 Another example is
 
-> Count the number of administrative region level 2's that sf:overlap
+> Count the number of administrative region level 2's that kwg-ont:sfOverlap
 
 The query _should_ have a count of 0.
 

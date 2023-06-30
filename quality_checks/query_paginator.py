@@ -1,6 +1,6 @@
-from typing import Callable
+from typing import Dict, Generator, Any
 
-from SPARQLWrapper import JSON, QueryResult, SPARQLWrapper
+from SPARQLWrapper import JSON, SPARQLWrapper
 
 from quality_checks.config import config
 
@@ -31,23 +31,13 @@ class QueryPaginator:
     def query(
         self,
         sparql_query: str,
-        quality_check: Callable[[QueryResult.ConvertResult], None],
         offset: int = 0,
-    ) -> None:
+    ) -> Generator[Dict[Any, Any], None, None]:
         """
-        Queries the database, calling `quality_check` on each page. The callable
-        function must contain unittest or general assert statements to trigger a
-        test failure if a condition isn't met.
-
-        def quality_check(query_results):
-            # Example function that checks the results of a query
-            assert query_results["results"]["bindings"][0]['count']['value'] == 100
-
+        Queries the database, returning a page of results
         :param sparql_query: The SPARQL query being executed
-        :param quality_check: A function that's run between
-        paginations. The 'quality_check' parameter is a SPARQL ResultSet serialized as a
-        python dict
         :param offset: The offset to start retrieving results from :return: None
+        :ret
         """
         # Add an offset and limit to the query
         sparql_query_limited = f"{sparql_query} OFFSET {offset} LIMIT {self.limit}"
@@ -60,10 +50,10 @@ class QueryPaginator:
             raise ValueError(
                 f"Failed to get query results as a dict. {type(converted)}"
             )
-        quality_check(converted)
+        yield converted
         # If the length is equal to the maximum response length, query again,
         # increasing the offset by 1000
         if len(converted["results"]["bindings"]) == self.limit:
-            self.query(sparql_query_limited, quality_check, offset + 1000)
+            self.query(sparql_query_limited, offset + 1000)
         else:
             return

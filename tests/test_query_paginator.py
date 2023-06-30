@@ -25,7 +25,7 @@ class QueryPaginatorTests(TestCase):
                     "zip_area": {
                         "type": "uri",
                         "value": "http://stko-kwg.geog.ucsb.edu/lod/"
-                                 "resource/zipCodeArea.00646",
+                        "resource/zipCodeArea.00646",
                     }
                 }
             ]
@@ -40,7 +40,7 @@ class QueryPaginatorTests(TestCase):
                     "zip_area": {
                         "type": "uri",
                         "value": "http://stko-kwg.geog.ucsb.edu/lod/"
-                                 "resource/zipCodeArea.00646",
+                        "resource/zipCodeArea.00646",
                     }
                 }
             ]
@@ -56,7 +56,7 @@ class QueryPaginatorTests(TestCase):
                     "zip_area": {
                         "type": "uri",
                         "value": "http://stko-kwg.geog.ucsb.edu/"
-                                 "lod/resource/zipCodeArea.00646",
+                        "lod/resource/zipCodeArea.00646",
                     }
                 }
             ]
@@ -86,22 +86,16 @@ class QueryPaginatorTests(TestCase):
         self, query_mock: unittest.mock.MagicMock, convert_mock: unittest.mock.MagicMock
     ) -> None:
         """
-        Tests that when recursion isn't used, the test function is called with
-        the sparql results.
+        Tests that when recursion isn't used, the correct number of results
+        can be asserted
 
         :return: None
         """
-
-        def quality_check(request_results):
-            """
-            A mock test that makes sure 500 entities were found
-            """
-            self.assertEqual(len(request_results["results"]["bindings"]), 500)
-
         convert_mock.return_value = self.return_pattern_half_page
         query_mock.return_value = QueryResult(client.HTTPResponse(socket.socket()))
         query = """SELECT * WHERE { ?s ?p ?o }"""
-        QueryPaginator().query(query, quality_check)
+        for page_results in QueryPaginator().query(query):
+            self.assertEqual(len(page_results["results"]["bindings"]), 500)
 
     @mock.patch("quality_checks.query_paginator.QueryResult.convert")
     @mock.patch("quality_checks.query_paginator.SPARQLWrapper.query")
@@ -110,20 +104,10 @@ class QueryPaginatorTests(TestCase):
     ) -> None:
         """
         Tests that when there's more than one page of results, the paginator properly
-        fetches each page. he test works by mocking the sparql requests and checking
-        that the request functions are called the correct number of times (one time
-        per page).
+        fetches each page.
 
         :return: None
         """
-
-        def quality_check(request_results: dict) -> None:
-            """
-            It's difficult to write a test that will pass when request_results
-            will change between calls. Rather than test in this function, do nothing.
-            """
-            pass
-
         query_mock.return_value = QueryResult(client.HTTPResponse(socket.socket()))
         # Return 2.5 pages of results
         convert_mock.side_effect = [
@@ -132,10 +116,8 @@ class QueryPaginatorTests(TestCase):
             self.return_pattern_half_page,
         ]
         query = """SELECT * WHERE { ?s ?p ?o FILTER(some_interesting_property)}"""
-        QueryPaginator().query(query, quality_check)
-        # Check that convert() was called twice, testing that the second
-        # page of values was retrieved
-        self.assertEqual(convert_mock.call_count, 3)
+
+        self.assertEqual(len(list(QueryPaginator().query(query))), 3)
 
     @mock.patch("quality_checks.query_paginator.QueryResult.convert")
     @mock.patch("quality_checks.query_paginator.SPARQLWrapper.query")
@@ -143,21 +125,18 @@ class QueryPaginatorTests(TestCase):
         self, query_mock: unittest.mock.MagicMock, convert_mock: unittest.mock.MagicMock
     ) -> None:
         """
+        Tests that failures can happen on non-recursive calls
+
         :return: None
         """
-
-        def quality_check(request_results):
-            """
-            A mock test that checks if 1000 entities were found
-            """
-            self.assertEqual(len(request_results), 1000)
-
         # Only return 10 results, which should make the quality test function fail
         convert_mock.return_value = self.return_pattern_half_page
         query_mock.return_value = QueryResult(client.HTTPResponse(socket.socket()))
         query = """SELECT * WHERE { ?s ?p ?o }"""
         with pytest.raises(AssertionError):
-            QueryPaginator().query(query, quality_check)
+            for page_results in QueryPaginator().query(query):
+                # Pretend that we're expecting 1,000 results
+                self.assertEqual(len(page_results), 1000)
 
     @mock.patch("quality_checks.query_paginator.QueryResult.convert")
     @mock.patch("quality_checks.query_paginator.SPARQLWrapper.query")
@@ -170,15 +149,6 @@ class QueryPaginatorTests(TestCase):
 
         :return: None
         """
-
-        def quality_check(request_results):
-            """
-            A mock test that checks if 1000 entities were found. This will pass the
-            first time because a single page has 1000 results. It will fail the
-            second, which will only have 500
-            """
-            self.assertEqual(len(request_results), 1000)
-
         query_mock.return_value = QueryResult(client.HTTPResponse(socket.socket()))
         # Return 1.5 pages
         convert_mock.side_effect = [
@@ -187,7 +157,8 @@ class QueryPaginatorTests(TestCase):
         ]
         query = """SELECT * WHERE { ?s ?p ?o }"""
         with pytest.raises(AssertionError):
-            QueryPaginator().query(query, quality_check)
+            for query_page in QueryPaginator().query(query):
+                self.assertEqual(len(query_page), 1000)
 
 
 if __name__ == "__main__":

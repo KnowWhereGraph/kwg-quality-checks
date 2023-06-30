@@ -23,7 +23,7 @@ class ZipCodeTests(unittest.TestCase):
         PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
 
             SELECT (count(?zip_area) as ?count) WHERE {
-              ?zip_area a kwg-ont:zipCodeArea .
+              ?zip_area a kwg-ont:ZipCodeArea .
         }
         """
 
@@ -33,22 +33,6 @@ class ZipCodeTests(unittest.TestCase):
         res = sparql.query().convert()
         # There are at least 40k zipcodes
         self.assertGreater(int(res["results"]["bindings"][0]["count"]["value"]), 1)
-
-
-var = {
-    "head": {"vars": ["count"]},
-    "results": {
-        "bindings": [
-            {
-                "count": {
-                    "datatype": "http://www.w3.org/2001/XMLSchema#integer",
-                    "type": "literal",
-                    "value": "0",
-                }
-            }
-        ]
-    },
-}
 
 
 if __name__ == "__main__":

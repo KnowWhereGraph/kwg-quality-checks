@@ -42,3 +42,6 @@ Thumbs.db
 .coverage
 .pytest_cache/
 **/__pycache__/
+
+# pyenv
+.python-version
