@@ -7,7 +7,7 @@
     },
     {
       "uri": "http://stko-kwg.geog.ucsb.edu/lod/ontology/",
-      "prefix": "kwgo"
+      "prefix": "kwg-ont"
     },
     {
       "uri": "http://www.opengis.net/def/function/geosparql/",
