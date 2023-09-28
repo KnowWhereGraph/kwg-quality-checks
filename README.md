@@ -3,12 +3,12 @@ Knowledge Graph quality checks for KWG data
 
 ## Overview
 This repository contains tests that are run against a Knowledge Graph, most likely the staging GraphDB deployment.
-Each test file addresses a set of competency questions about a dataset, domain of thought, or aspect of triplification.
+Each test file contains SPARQL queries that address a set of competency questions about a dataset, domain of thought, or aspect of triplification.
 
 The repository is built as a set of unit tests which can be expanded on as the data changes.
 
 ## Configuring
-The application config is set in the root `config.json`, where the endpoint and SPARQL prefixes can be set. New prefixes or
+The application config is set in the root `config.json` where the endpoint and SPARQL prefixes can be set. New prefixes or
 additional project functionality can be injected into this file.
 
 ## Running
